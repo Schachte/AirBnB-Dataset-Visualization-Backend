@@ -17,10 +17,12 @@ def CalendarSummary(request, city):
     @Description:
     Calendar Summary will retrieve 365 days of average pricing data and events for a particular city
     """
-    
+    print("doing a query on the database for %s"%(city))
+    search_string = '\'%s\''%(city)
+    print(search_string)
     
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM calendar_summary")
+    cursor.execute('SELECT * FROM calendar_summary WHERE city_name="%s"'%(search_string))
     rows = cursor.fetchall()
     
     #Store return data from the SQL query
