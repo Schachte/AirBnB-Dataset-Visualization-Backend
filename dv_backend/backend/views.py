@@ -1,30 +1,39 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User, Group
-from rest_framework import viewsets
 from django.http import HttpResponse, HttpResponseNotFound
-from backend.serializers import UserSerializer, GroupSerializer
 from django.http import JsonResponse
+from django.db import connection
+from bson import json_util
+import json
+import os
 
-class UserViewSet(viewsets.ModelViewSet):
+def CalendarSummary(request, city):
     """
-    API endpoint that allows users to be viewed or edited.
-    """
-    queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer
-
-
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-
-def FatimaIsDingus(request):
-    """
-    This is a test view to show how URLS are mapped to functions for doing the data processing
+    @Table Structure:
+    +------------+------------+---------------+------------------------------------------------------+
+    | city_name  | date       | average_price | happenings                                           |
+    +------------+------------+---------------+------------------------------------------------------+
+    
+    @Description:
+    Calendar Summary will retrieve 365 days of average pricing data and events for a particular city
     """
     
-    data = 2+2
-    print(data)
-    return JsonResponse({'sons_name':'kson'})
+    return HttpResponse(os.environ['DV_PW'])
+    
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM calendar_summary")
+    rows = cursor.fetchall()
+    
+    #Store return data from the SQL query
+    result = []
+    
+    #Column values in the summary table
+    keys = ('city_name','date', 'average_price', 'happenings')
+    
+    for row in rows:
+        result.append(dict(zip(keys,row)))
+        
+    json_data = json.dumps(result, indent=4, sort_keys=True, default=str)
+    
+    #Get the city information for 1 year
+    return HttpResponse(json_data, content_type="application/json")
