@@ -18,7 +18,6 @@ def CalendarSummary(request, city):
     Calendar Summary will retrieve 365 days of average pricing data and events for a particular city
     """
     
-    return HttpResponse(os.environ['DV_PW'])
     
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM calendar_summary")
