@@ -13,28 +13,26 @@ def CalendarSummary(request, city):
     +------------+------------+---------------+------------------------------------------------------+
     | city_name  | date       | average_price | happenings                                           |
     +------------+------------+---------------+------------------------------------------------------+
-    
+
     @Description:
     Calendar Summary will retrieve 365 days of average pricing data and events for a particular city
     """
     print("doing a query on the database for %s"%(city))
-    search_string = '\'%s\''%(city)
-    print(search_string)
-    
+
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM calendar_summary WHERE city_name="%s"'%(search_string))
+    cursor.execute('SELECT * FROM calendar_summary WHERE city_name="%s"'%(city))
     rows = cursor.fetchall()
-    
+
     #Store return data from the SQL query
     result = []
-    
+
     #Column values in the summary table
     keys = ('city_name','date', 'average_price', 'happenings')
-    
+
     for row in rows:
         result.append(dict(zip(keys,row)))
-        
+
     json_data = json.dumps(result, indent=4, sort_keys=True, default=str)
-    
+
     #Get the city information for 1 year
     return HttpResponse(json_data, content_type="application/json")
