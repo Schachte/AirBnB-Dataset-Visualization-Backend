@@ -9,4 +9,5 @@ router = routers.DefaultRouter()
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'summaries/daily/(?P<city>\w+)/$', views.CalendarSummary),
+    url(r'review/comments/(?P<city>\w+)/$', views.CityReviews),
 ]

@@ -4,8 +4,37 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.http import JsonResponse
 from django.db import connection
 from bson import json_util
+import unicodedata
 import json
 import os
+
+
+def CityReviews(request, city):
+    """
+    @Description:
+    Calendar Summary will retrieve 365 days of average pricing data and events for a particular city
+    """
+    print("doing a query on the database for %s"%(city))
+
+    cursor = connection.cursor()
+    cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s" limit 5'%(city))
+    rows = cursor.fetchall()
+    #Store return data from the SQL query
+    result = []
+
+    #Column values in the summary table
+    keys = ('city_name', 'comments')
+    
+    for row in rows:
+        row = list(row)
+        row[1] = unicodedata.normalize('NFKD', row[1]).encode('ascii','ignore')
+        row[1] = row[1].replace('\n', ' ').replace('\r', '')
+        result.append(dict(zip(keys,row)))
+
+    json_data = json.dumps(result, indent=4, sort_keys=True, default=str)
+
+    #Get the city information for 1 year
+    return HttpResponse(json_data, content_type="application/json")
 
 def CalendarSummary(request, city):
     """
