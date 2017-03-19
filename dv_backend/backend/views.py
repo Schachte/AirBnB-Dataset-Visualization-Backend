@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse, HttpResponseNotFound
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.db import connection
 from bson import json_util
 import unicodedata
-import json
+import json, ast
 import os
-
+from django.views.decorators.csrf import csrf_exempt
 
 def CityReviews(request, city):
     """
@@ -17,7 +18,7 @@ def CityReviews(request, city):
     print("doing a query on the database for %s"%(city))
 
     cursor = connection.cursor()
-    cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s" limit 5'%(city))
+    cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s"'%(city))
     rows = cursor.fetchall()
     #Store return data from the SQL query
     result = []
