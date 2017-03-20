@@ -47,23 +47,31 @@ def loadHolidays(request, city):
 
     print("Call API for Holidays for a city")
     #JSON url to be changed for every city.
-    resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FBrussels")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FAmsterdam")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FBrussels")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=America%2FLos_Angeles")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FAthens")
+    resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FBerlin")
 
     jsonResponse=json.loads(resp.text)
     cursor = connection.cursor()
 
     for item in jsonResponse:
-        name = item.get("name")
-        hddate = item.get("date")
-        hdname = "$@@$"+name+"|||"
-        cursor.execute('INSERT INTO holiday_event \
-                            (date, city, holiday) \
-                        VALUES \
-                            (%s, %s, %s) \
-                        ON DUPLICATE KEY UPDATE \
-                            holiday = concat(holiday, %s);', (hddate, city, hdname, hdname))
-        # cursor.execute('UPDATE calendar_summary SET happenings = %s WHERE city_name = %s AND date = %s', (hdname, search_string, hddate))
-        connection.commit()
+        try:
+            name = item.get("name")
+            hddate = item.get("date")
+            hdname = "$@@$"+name+"|||"
+            cursor.execute('INSERT INTO holiday_event \
+                                (date, city, holiday, event) \
+                            VALUES \
+                                (%s, %s, %s, %s) \
+                            ON DUPLICATE KEY UPDATE \
+                                holiday = concat(holiday, %s);', (hddate, city, hdname, "  ", hdname))
+            # cursor.execute('UPDATE calendar_summary SET happenings = %s WHERE city_name = %s AND date = %s', (hdname, search_string, hddate))
+            connection.commit()
+        except Exception as detail:
+            pass
+
 
     # hddate = "2017-07-10"
     # hdname = "Suhasini's Birthday"
@@ -95,22 +103,22 @@ def loadEvents(requests, city):
     api = eventful.API('JmGWfK7NFTc4NvX7')
 
     #for multiple event categories:
-    categories=['music','art','business','sports','health','education','theatre']
+    # categories=['art','business','sports','health','education','theatre']
     # cities=['Brussels','Chicago','Copenhagen','Denver','Dublin','Edinburgh','Geneva','London','Hong Kong']
     #
     # for city1 in cities:
-    for category in categories:
-        events = api.call('/events/search', c=category, l=city, t='2016010100-2017123100', page_size=1000, sort_order='popularity')
-        cursor = connection.cursor()
-        #q='music', , sort_order='popularity', sort_direction='descending'
-        #business||music||art||animals||books||sports
-        #search_string = '\'%s\''%(city)
-        for event in events['events']['event']:
+    cursor = connection.cursor()
+    # for category in categories:
+    events = api.call('/events/search', l=city, t='2016010100-2017123100', page_size=3000, sort_order='popularity', sort_direction='descending')
+
+    for event in events['events']['event']:
+        try:
             title = event['title']
             title = "&&##"+title+"|||"
             venue_name = event['venue_name']
             start_time = event['start_time']
             start_date = start_time[0:10]
+            print start_date, title
             cursor.execute('INSERT INTO holiday_event \
                                 (date, city, event) \
                             VALUES \
@@ -118,8 +126,12 @@ def loadEvents(requests, city):
                             ON DUPLICATE KEY UPDATE \
                                 event = concat(event, %s);', (start_date, city, title, title))
             connection.commit()
+        except Exception as detail:
+            pass
+
+
             #cursor.execute('UPDATE calendar_summary SET happenings = concat(happenings, %s) WHERE city_name = %s AND date = %s', (title, search_string, start_date))
 
 
 
-    return HttpResponse(title)
+    return HttpResponse(event)
