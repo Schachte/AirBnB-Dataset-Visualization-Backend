@@ -51,8 +51,7 @@ def AmenityData(request):
         city_name   = post_dat['city_name']
         metric      = post_dat['metric']
         filters = [x.strip(' ') for x in post_dat['filters'].split(',')]
-        
-        print(filters)
+        filters = ', '.join(filters)
         
         #Build the filter query to only set values to true if that filter was selected
         filter_query = ''
@@ -60,23 +59,8 @@ def AmenityData(request):
         if (filters[0]!=''):
             for amenity in filters:
                 filter_query += 'and %s = "t" '%(amenity)
-                
-                
-            # use dataviz;
-            # 
-            # SELECT
-            #     ( ( avgWithCriteria - totalAverage ) / ( ( avgWithCriteria + totalAverage ) / 2 ) ) * 100 as percentDifference,
-            #     a.*
-            # FROM
-            #     (SELECT
-            #         AVG( CASE WHEN 'f' not in ( has_internet ) THEN price ELSE null END) as avgWithCriteria,
-            #         AVG( CASE WHEN 'f'        in ( has_internet) THEN price ELSE null END) as avgWithoutCriteria,
-            #         AVG( price ) as totalAverage,
-            #         neighbourhood_cleansed
-            #     FROM listings 
-            #     WHERE city_name = 'Brussels'
-            #     GROUP BY neighbourhood_cleansed ) a;        
-        #Execute SQL command
+
+        #Initialize the query that will get the pricing information based on the input information from the user into the SQL query
         cursor = connection.cursor()
         if (filter_query != ''):
             
@@ -86,16 +70,29 @@ SELECT
     a.*
 FROM
     (SELECT
-        AVG( CASE WHEN 'f' not in ( has_internet ) THEN price ELSE null END) as avgWithCriteria,
-        AVG( CASE WHEN 'f'        in ( has_internet) THEN price ELSE null END) as avgWithoutCriteria,
+        AVG( CASE WHEN 'f' not in ( %s ) THEN price ELSE null END) as avgWithCriteria,
+        AVG( CASE WHEN 'f'        in ( %s ) THEN price ELSE null END) as avgWithoutCriteria,
+        AVG( price ) as totalAverage,
+        neighbourhood_cleansed
+    FROM listings 
+    WHERE city_name = '%s'
+    GROUP BY neighbourhood_cleansed ) a; 
+            '''%(filters, filters, city_name))
+        else:
+            cursor.execute('''
+SELECT
+    ( ( avgWithCriteria - totalAverage ) / ( ( avgWithCriteria + totalAverage ) / 2 ) ) * 100 as percentDifference,
+    a.*
+FROM
+    (SELECT
+        AVG( CASE WHEN 'f' not in ( host_is_superhost, instant_bookable, has_internet, has_kitchen, allows_pets, has_free_parking, has_pool, has_gym, has_tv, pets_live_on_property, allows_smoking,has_washer_and_dryer) THEN price ELSE null END) as avgWithCriteria,
+        AVG( CASE WHEN 'f'        in ( host_is_superhost, instant_bookable, has_internet, has_kitchen, allows_pets, has_free_parking, has_pool, has_gym, has_tv, pets_live_on_property, allows_smoking,has_washer_and_dryer ) THEN price ELSE null END) as avgWithoutCriteria,
         AVG( price ) as totalAverage,
         neighbourhood_cleansed
     FROM listings 
     WHERE city_name = 'Brussels'
-    GROUP BY neighbourhood_cleansed ) a; 
+    GROUP BY neighbourhood_cleansed ) a;            
             ''')
-        else:
-            cursor.execute('SELECT neighbourhood_cleansed, AVG(price) from listings where city_name = "%s" group by neighbourhood_cleansed;'%(city_name))
         rows = cursor.fetchall()
 
         #Store return data from the SQL query
