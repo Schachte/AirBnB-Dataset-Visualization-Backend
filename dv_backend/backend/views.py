@@ -10,6 +10,10 @@ import json, ast
 import os
 from django.views.decorators.csrf import csrf_exempt
 
+def Uptime(request):
+    return HttpResponse("Up!")
+
+
 def CityReviews(request, city):
     """
     @Description:

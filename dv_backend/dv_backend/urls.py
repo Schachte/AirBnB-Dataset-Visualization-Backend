@@ -12,4 +12,5 @@ urlpatterns = [
     url(r'summaries/daily/(?P<city>\w+)/$', calendar_views.CalendarSummary),
     url(r'review/comments/(?P<city>\w+)/$', calendar_views.CityReviews),
     url(r'amenities/$', amenity_views.AmenityData),
+    url(r'up/$', calendar_views.Uptime),
 ]
