@@ -51,7 +51,9 @@ def loadHolidays(request, city):
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FBrussels")
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=America%2FLos_Angeles")
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FAthens")
-    resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FBerlin")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FBerlin")
+    resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FCopenhagen")
+    
 
     jsonResponse=json.loads(resp.text)
     cursor = connection.cursor()
