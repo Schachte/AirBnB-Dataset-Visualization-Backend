@@ -51,7 +51,6 @@ def CalendarSummary(request, city):
     @Description:
     Calendar Summary will retrieve 365 days of average pricing data and events for a particular city
     """
-    print("doing a query on the database for %s"%(city))
 
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM calendar_summary WHERE city_name="%s"'%(city))

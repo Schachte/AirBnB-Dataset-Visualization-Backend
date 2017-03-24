@@ -51,7 +51,7 @@ def AmenityData(request):
         
         #Initialize the query that will get the pricing information based on the input information from the user into the SQL query
         cursor = connection.cursor()
-        cursor.execute(retrieve_query(filters, city_name, amenities))
+        cursor.execute(retrieve_query(filters, city_name, amenities, metric))
         rows = cursor.fetchall()
 
         #Store return data from the SQL query
@@ -81,7 +81,7 @@ def cleanse_input(post_dat):
     return city_name, metric, filters
         
         
-def retrieve_query(filters, city, amenities):
+def retrieve_query(filters, city, amenities, metric):
     '''
     @Description:
     Retrieve SQL Query
@@ -94,19 +94,21 @@ def retrieve_query(filters, city, amenities):
     else:
         query_params = filters
         
+    print('where the metric is %s'%(metric))
+        
     return ('''
 SELECT
     ( ( avgWithCriteria - totalAverage ) / ( ( avgWithCriteria + totalAverage ) / 2 ) ) * 100 as percentDifference,
     a.*
 FROM
     (SELECT
-        AVG( CASE WHEN 'f' not in ( %s ) THEN price ELSE null END) as avgWithCriteria,
-        AVG( CASE WHEN 'f'        in ( %s ) THEN price ELSE null END) as avgWithoutCriteria,
-        AVG( price ) as totalAverage,
+        AVG( CASE WHEN 'f' not in ( %s ) THEN %s ELSE null END) as avgWithCriteria,
+        AVG( CASE WHEN 'f'        in ( %s ) THEN %s ELSE null END) as avgWithoutCriteria,
+        AVG( %s ) as totalAverage,
         neighbourhood_cleansed
     FROM listings 
     WHERE city_name = '%s'
     GROUP BY neighbourhood_cleansed ) a; 
-'''%(query_params, query_params, city))
+'''%(query_params, metric, query_params, metric, metric, city))
         
     
