@@ -60,7 +60,7 @@ def ParallelCoordData(request):
         result = []
 
         #Column values in the summary table
-        keys = ('id', 'Price', 'Estimated Stay Count', 'Estimated Monthly Income')
+        keys = ('Price', 'Estimated Stay Count', 'Estimated Monthly Income')
 
         for row in rows:
             result.append(dict(zip(keys,row)))
@@ -101,7 +101,7 @@ def retrieve_query(filters, city, amenities, neighborhood):
     if (not neighborhood):
         return ('''
                 SELECT
-                    id, price, number_of_reviews, est_monthly_income
+                    price, number_of_reviews, est_monthly_income
                 FROM
                     listings
                 WHERE
@@ -112,7 +112,7 @@ def retrieve_query(filters, city, amenities, neighborhood):
     else:
         return ('''
                 SELECT
-                    id, price, number_of_reviews, est_monthly_income
+                    price, number_of_reviews, est_monthly_income
                 FROM
                     listings
                 WHERE
