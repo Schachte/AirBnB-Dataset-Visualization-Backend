@@ -74,6 +74,7 @@ def AmenityData(request):
         
         for data in result:
             correct_bin = -1
+            data['percentDifference'] = float(data['percentDifference'])
             percent_difference_value = round(data['percentDifference'], 2)
             
             if (percent_difference_value is not None):
