@@ -73,16 +73,17 @@ def AmenityData(request):
         print("max val is " + str(max_value))
         
         for data in result:
-            correct_bin = -1
-            data['percentDifference'] = float(data['percentDifference'])
-            percent_difference_value = round(data['percentDifference'], 2)
-            
-            if (percent_difference_value is not None):
-                current_value = float(percent_difference_value)
-                correct_bin = determine_bin_placement(bin_width, current_value, min_value)
-                correct_bin = 7 if correct_bin > 7 else correct_bin or 1 if correct_bin < 1 else correct_bin
-                print(correct_bin)
-            data['bin'] = int(correct_bin)
+	    if (data is not None):
+		    correct_bin = -1
+		    data['percentDifference'] = float(data['percentDifference'])
+		    percent_difference_value = round(data['percentDifference'], 2)
+		    
+		    if (percent_difference_value is not None):
+			current_value = float(percent_difference_value)
+			correct_bin = determine_bin_placement(bin_width, current_value, min_value)
+			correct_bin = 7 if correct_bin > 7 else correct_bin or 1 if correct_bin < 1 else correct_bin
+			print(correct_bin)
+		    data['bin'] = int(correct_bin)
 
         #Get the average pricing information based on filter selection
         return HttpResponse(json.dumps(result, indent=4, sort_keys=True, default=str), content_type="application/json", status=200)
