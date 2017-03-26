@@ -1,59 +1,50 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse, HttpResponseNotFound
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.db import connection
 from bson import json_util
-import json
+import unicodedata
+import json, ast
 import os
 import requests
 import httplib2
 import simplejson
 import eventful
+from django.views.decorators.csrf import csrf_exempt
 
-def SuhaTest(request, city):
+def Uptime(request):
+    return HttpResponse("Up!")
 
+
+def CityReviews(request, city):
     """
     @Description:
-    loadEventsAndHolidays will call APIs to fetch events and holidays from different APIs and store them into calendar_summary table.
-
+    Calendar Summary will retrieve 365 days of average pricing data and events for a particular city
     """
-    # print("Call API for Holidays for a city")
-    #
-    # resp = requests.get("http://www.webcal.fi/cal.php?id=52&format=json&start_year=2016&end_year=2017&tz=%2F"+city)
-    #
-    # jsonResponse=json.loads(resp.text)
-    # cursor = connection.cursor()
-    #
-    # search_string = '\'%s\''%(city)
-    #
-    # for item in jsonResponse:
-    #     name = item.get("name")
-    #     hddate = item.get("date")
-    #     hdname = "$@@$"+name+"|||"
-    #     cursor.execute('UPDATE calendar_summary SET happenings = %s WHERE city_name = %s AND date = %s', (hdname, search_string, hddate))
-    #     connection.commit()
-    #
+    print("doing a query on the database for %s"%(city))
 
-    print("Call API for Events in a City")
-
-    api = eventful.API('JmGWfK7NFTc4NvX7')
-
-    events = api.call('/events/search', q='music', l=city, d='2016010100-20171231')
     cursor = connection.cursor()
+    cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s"'%(city))
+    rows = cursor.fetchall()
+    #Store return data from the SQL query
+    result = []
 
-    search_string = '\'%s\''%(city)
+    #Column values in the summary table
+    keys = ('city_name', 'comments')
 
-    for event in events['events']['event']:
-        title = event['title']
-        title = "&&##"+title+"|||"
-        venue_name = event['venue_name']
-        start_time = event['start_time']
-        start_date = start_time[0:10]
-        cursor.execute('UPDATE calendar_summary SET happenings = concat(happenings, %s) WHERE city_name = %s AND date = %s', (title, search_string, start_date))
+    for row in rows:
+        row = list(row)
+        row[1] = unicodedata.normalize('NFKD', row[1]).encode('ascii','ignore')
+        row[1] = row[1].replace('\n', ' ').replace('\r', '')
+        result.append(dict(zip(keys,row)))
 
+    json_data = json.dumps(result, indent=4, sort_keys=True, default=str)
 
-    return HttpResponse(start_date)
+    #Get the city information for 1 year
+    return HttpResponse(json_data, content_type="application/json")
+
 
 def CalendarSummary(request, city):
     """
@@ -65,12 +56,14 @@ def CalendarSummary(request, city):
     @Description:
     Calendar Summary will retrieve 365 days of average pricing data and events for a particular city
     """
+
     print("doing a query on the database for %s"%(city))
 
 
     cursor = connection.cursor()
     cursor.execute('SELECT calendar_summary.city_name, calendar_summary.date, calendar_summary.average_price, holiday_event.holiday, holiday_event.event FROM calendar_summary left JOIN holiday_event ON (calendar_summary.city_name = holiday_event.city and calendar_summary.date = holiday_event.date) where calendar_summary.city_name = "%s" order by calendar_summary.date'%(city) )
     # 'SELECT * FROM calendar_summary WHERE city_name="%s"'%(city))
+
     rows = cursor.fetchall()
 
     #Store return data from the SQL query
