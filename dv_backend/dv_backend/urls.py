@@ -3,6 +3,7 @@ from rest_framework import routers
 from backend import event_holiday_APICall
 from backend import views as calendar_views
 from amenities import views as amenity_views
+from parallel_coord_plot import views as parallel_views
 
 router = routers.DefaultRouter()
 
@@ -19,4 +20,5 @@ urlpatterns = [
     url(r'review/comments/(?P<city>\w+)/$', calendar_views.CityReviews),
     url(r'amenities/$', amenity_views.AmenityData),
     url(r'up/$', calendar_views.Uptime),
+    url(r'parallelcoord/$', parallel_views.ParallelCoordData),
 ]
