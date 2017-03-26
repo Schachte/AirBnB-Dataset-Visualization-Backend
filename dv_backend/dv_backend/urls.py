@@ -14,4 +14,5 @@ urlpatterns = [
     url(r'testCreateTable/$', event_holiday_APICall.createHolidayEventTable),
     url(r'testloadholiday/(?P<city>\w+)/$', event_holiday_APICall.loadHolidays),
     url(r'testloadevent/(?P<city>\w+)/$', event_holiday_APICall.loadEvents),
+    url(r'testholidayevent/(?P<city>\w+)/(?P<date>\d+)/$', event_holiday_APICall.HolidayEvent),
 ]

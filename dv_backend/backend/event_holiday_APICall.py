@@ -10,6 +10,8 @@ import requests
 import httplib2
 import simplejson
 import eventful
+import re
+import time
 
 def createHolidayEventTable(request):
 
@@ -52,8 +54,8 @@ def loadHolidays(request, city):
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=America%2FLos_Angeles")
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FAthens")
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FBerlin")
-    resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FCopenhagen")
-    
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FCopenhagen")
+    resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=America%2FToronto")
 
     jsonResponse=json.loads(resp.text)
     cursor = connection.cursor()
@@ -62,7 +64,7 @@ def loadHolidays(request, city):
         try:
             name = item.get("name")
             hddate = item.get("date")
-            hdname = "$@@$"+name+"|||"
+            hdname = name+", "
             cursor.execute('INSERT INTO holiday_event \
                                 (date, city, holiday, event) \
                             VALUES \
@@ -111,29 +113,90 @@ def loadEvents(requests, city):
     # for city1 in cities:
     cursor = connection.cursor()
     # for category in categories:
-    events = api.call('/events/search', l=city, t='2016010100-2017123100', page_size=3000, sort_order='popularity', sort_direction='descending')
 
-    for event in events['events']['event']:
-        try:
-            title = event['title']
-            title = "&&##"+title+"|||"
-            venue_name = event['venue_name']
-            start_time = event['start_time']
-            start_date = start_time[0:10]
-            print start_date, title
-            cursor.execute('INSERT INTO holiday_event \
-                                (date, city, event) \
-                            VALUES \
-                                (%s, %s, %s) \
-                            ON DUPLICATE KEY UPDATE \
-                                event = concat(event, %s);', (start_date, city, title, title))
-            connection.commit()
-        except Exception as detail:
-            pass
+    events_count = 0
+    try:
+        for num in range(1,4):
+            events = api.call('/events/search', l=city, t='2016010100-2017123100', page_size=250, page_number = num, sort_order='popularity', sort_direction='descending')
+
+            for event in events['events']['event']:
+                try:
+                    title = event['title']
+                    title = title+", "
+                    venue_name = event['venue_name']
+                    start_time = event['start_time']
+                    start_date = start_time[0:10]
+                    print start_date, title
+                    cursor.execute('INSERT INTO holiday_event \
+                                        (date, city, event) \
+                                    VALUES \
+                                        (%s, %s, %s) \
+                                    ON DUPLICATE KEY UPDATE \
+                                        event = concat(event, %s);', (start_date, city, title, title))
+                    connection.commit()
+                    events_count+=1
+                    # time.sleep(1)
+                except Exception as detail:
+                    print(detail)
+                    return HttpResponse(events_count)
+                    pass
+    except Exception as detail:
+        print(detail)
+        return HttpResponse(events_count)
+        pass
+                # pass
+
 
 
             #cursor.execute('UPDATE calendar_summary SET happenings = concat(happenings, %s) WHERE city_name = %s AND date = %s', (title, search_string, start_date))
 
 
 
-    return HttpResponse(event)
+    return HttpResponse(events_count)
+
+
+def HolidayEvent(request, city, date):
+
+    """
+    @Table Structure:
+    +-------+------------+-------------------------------+-------------------------------------------+
+    | date  | city       |          holiday              |          event                            |
+    +-------+------------+-------------------------------+-------------------------------------------+
+
+    @Description:
+    Holiday_Event will retrieve holidays and events for a city for a given date
+    """
+
+    #Access the request headers for the date
+    # regex = re.compile('^HTTP_')
+    # data = dict((regex.sub('', header), value) for (header, value)
+    #        in request.META.items() if header.startswith('HTTP_'))
+    # date = data['DATE']
+
+    # date=1503817200
+    #
+    correct_date = time.strftime('%Y-%m-%d', time.localtime(1501138800))
+
+    print correct_date
+
+    print("doing a query on the database for city %s on date %s"%(city, date))
+    # search_string = '\'%s\''%(city)
+
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM holiday_event WHERE city="%s" AND date = "%s"'%(city, correct_date))
+    rows = cursor.fetchall()
+
+    #Store return data from the SQL query
+    result = []
+
+    print result
+
+    #Column values in the summary table
+    keys = ('date','city_name', 'holiday', 'event')
+
+    for row in rows:
+        result.append(dict(zip(keys,row)))
+
+    json_data = json.dumps(result, indent=4, sort_keys=True, default=str)
+
+    return HttpResponse(json_data, content_type="application/json")
