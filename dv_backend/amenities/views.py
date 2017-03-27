@@ -73,17 +73,18 @@ def AmenityData(request):
         print("max val is " + str(max_value))
         
         for data in result:
-	    if (data is not None):
-		    correct_bin = -1
-		    data['percentDifference'] = float(data['percentDifference'])
-		    percent_difference_value = round(data['percentDifference'], 2)
-		    
-		    if (percent_difference_value is not None):
-			current_value = float(percent_difference_value)
-			correct_bin = determine_bin_placement(bin_width, current_value, min_value)
-			correct_bin = 7 if correct_bin > 7 else correct_bin or 1 if correct_bin < 1 else correct_bin
-			print(correct_bin)
-		    data['bin'] = int(correct_bin)
+    	    if (data['percentDifference'] is not None):
+                correct_bin = -1
+                print(data['percentDifference'])
+                data['percentDifference'] = float(data['percentDifference'])
+                percent_difference_value = round(data['percentDifference'], 2)
+
+                if (percent_difference_value is not None):
+                    current_value = float(percent_difference_value)
+                    correct_bin = determine_bin_placement(bin_width, current_value, min_value)
+                    correct_bin = 7 if correct_bin > 7 else correct_bin or 1 if correct_bin < 1 else correct_bin
+                    print(correct_bin)
+                    data['bin'] = int(correct_bin)
 
         #Get the average pricing information based on filter selection
         return HttpResponse(json.dumps(result, indent=4, sort_keys=True, default=str), content_type="application/json", status=200)
@@ -100,16 +101,22 @@ def compute_bin_width(result):
     
     #Extract just the % difference values
     percent_difference_list = [pd['percentDifference'] for pd in result]
+    percent_difference_list_updated = []
     
     #Cheap way of removing nils
-    for index, data in enumerate(percent_difference_list):
-        if (data is None):
-            percent_difference_list.remove(data)
+    for data in percent_difference_list:
+        if data != None:
+            percent_difference_list_updated.append(data)
 
     #Compute all the values for the proper binning
-    MIN_VALUE = min([float(i) for i in percent_difference_list])
-    MAX_VALUE = max([float(i) for i in percent_difference_list])
+    MIN_VALUE = min([float(i) for i in percent_difference_list_updated])
+    MAX_VALUE = max([float(i) for i in percent_difference_list_updated])
+    
+    
+    print(MIN_VALUE, MAX_VALUE)
     BIN_WIDTH = (MAX_VALUE - MIN_VALUE) / NUMBER_OF_BINS 
+    
+    BIN_WIDTH = 1 if BIN_WIDTH < 1 else BIN_WIDTH
     
     return BIN_WIDTH, MIN_VALUE, MAX_VALUE
     
