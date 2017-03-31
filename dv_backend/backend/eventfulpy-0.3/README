@@ -1,0 +1,7 @@
+Simply run 'python setup.py install' to install eventful.py.
+
+eventful.py requires simplejson and httplib2; you can find them here:
+
+    simplejson: http://undefined.org/python/#simple_json
+    httplib2:   http://bitworking.org/projects/httplib2/
+

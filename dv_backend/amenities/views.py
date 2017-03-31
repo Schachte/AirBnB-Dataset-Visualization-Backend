@@ -13,16 +13,16 @@ import math
 
 @csrf_exempt
 def AmenityData(request):
-    
+
     '''
     @Description:
     Get average prices for each neighborhood in a specific city
     '''
-    
+
     if (request.method == 'POST'):
         #List requested input params
         req_params = ['city_name', 'metric', 'filters']
-        
+
         amenities = [
             'host_is_superhost',
             'security_deposit',
@@ -39,17 +39,17 @@ def AmenityData(request):
             'allows_smoking',
             'has_washer_and_dryer'
         ]
-        
+
         #Unicode cleanse
         post_dat  = ast.literal_eval(json.dumps(request.POST))
-        
+
         #Validation on query
         if not all(params in post_dat for params in req_params):
             return HttpResponse("Missing Parameters", status=422)
-        
+
         #Retrieve clenased information
         city_name, metric, filters = cleanse_input(post_dat)
-        
+
         #Initialize the query that will get the pricing information based on the input information from the user into the SQL query
         cursor = connection.cursor()
         cursor.execute(retrieve_query(filters, city_name, amenities, metric))
@@ -57,21 +57,21 @@ def AmenityData(request):
 
         #Store return data from the SQL query
         result = []
-        
+
         #Column values in the summary table
         keys = ('percentDifference', 'averageWithCriteria', 'averageWithoutCriteria', 'totalAverage', 'neighborhood')
-        
+
         for row in rows:
             result.append(dict(zip(keys,row)))
 
         #Compute the bin width for all values that are going to be classified
         bin_width, min_value, max_value = compute_bin_width(result)
         min_value = round(min_value, 2)
-        
+
         print("the bin width is " + str(bin_width))
         print("min val is " + str(min_value))
         print("max val is " + str(max_value))
-        
+
         for data in result:
     	    if (data['percentDifference'] is not None):
                 correct_bin = -1
@@ -90,7 +90,7 @@ def AmenityData(request):
         return HttpResponse(json.dumps(result, indent=4, sort_keys=True, default=str), content_type="application/json", status=200)
     else:
         return HttpResponse("Get Req. Unsupported on Amenities", status=405)
-        
+
 def compute_bin_width(result):
     '''
     @Description:
@@ -98,11 +98,11 @@ def compute_bin_width(result):
     '''
     #Max recommended number of bins to use for the equal interval classification
     NUMBER_OF_BINS = 7
-    
+
     #Extract just the % difference values
     percent_difference_list = [pd['percentDifference'] for pd in result]
     percent_difference_list_updated = []
-    
+
     #Cheap way of removing nils
     for data in percent_difference_list:
         if data != None:
@@ -111,15 +111,15 @@ def compute_bin_width(result):
     #Compute all the values for the proper binning
     MIN_VALUE = min([float(i) for i in percent_difference_list_updated])
     MAX_VALUE = max([float(i) for i in percent_difference_list_updated])
-    
-    
+
+
     print(MIN_VALUE, MAX_VALUE)
-    BIN_WIDTH = (MAX_VALUE - MIN_VALUE) / NUMBER_OF_BINS 
-    
+    BIN_WIDTH = (MAX_VALUE - MIN_VALUE) / NUMBER_OF_BINS
+
     BIN_WIDTH = 1 if BIN_WIDTH < 1 else BIN_WIDTH
-    
+
     return BIN_WIDTH, MIN_VALUE, MAX_VALUE
-    
+
 def determine_bin_placement(bin_width, value, min_value):
     '''
     @Description:
@@ -127,7 +127,7 @@ def determine_bin_placement(bin_width, value, min_value):
     '''
     #Formula Used: CEILING(value - min)/bin_wdith
     return math.ceil((value - min_value) / bin_width)
-    
+
 def cleanse_input(post_dat):
     '''
     @Description:
@@ -137,25 +137,25 @@ def cleanse_input(post_dat):
     metric      = post_dat['metric']
     filters = [x.strip(' ') for x in post_dat['filters'].split(',')]
     filters = ', '.join(filters)
-    
+
     return city_name, metric, filters
-        
-        
+
+
 def retrieve_query(filters, city, amenities, metric):
     '''
     @Description:
     Retrieve SQL Query
     '''
     query_params = ''
-    
-    #null params 
+
+    #null params
     if (not filters):
         query_params = ','.join(amenities)
     else:
         query_params = filters
-        
+
     print('where the metric is %s'%(metric))
-        
+
     return ('''
 SELECT
     ( ( avgWithCriteria - totalAverage ) / ( ( avgWithCriteria + totalAverage ) / 2 ) ) * 100 as percentDifference,
@@ -166,9 +166,7 @@ FROM
         AVG( CASE WHEN 'f'        in ( %s ) THEN %s ELSE null END) as avgWithoutCriteria,
         AVG( %s ) as totalAverage,
         neighbourhood_cleansed
-    FROM listings 
+    FROM listings
     WHERE city_name = '%s'
-    GROUP BY neighbourhood_cleansed ) a; 
+    GROUP BY neighbourhood_cleansed ) a;
 '''%(query_params, metric, query_params, metric, metric, city))
-        
-    
