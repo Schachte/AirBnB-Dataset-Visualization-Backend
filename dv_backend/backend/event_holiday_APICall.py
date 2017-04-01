@@ -50,12 +50,18 @@ def loadHolidays(request, city):
     print("Call API for Holidays for a city")
     #JSON url to be changed for every city.
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FAmsterdam")
-    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FBrussels")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2015&end_year=2016&tz=Europe%2FBrussels")
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=America%2FLos_Angeles")
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FAthens")
-    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FBerlin")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2015&end_year=2016&tz=Europe%2FBerlin")
     # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FCopenhagen")
-    resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=America%2FToronto")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=America%2FToronto")
+    resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FMadrid")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FParis")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2015&end_year=2016&tz=Europe%2FRome")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Australia%2FMelbourne")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Australia%2FSydney")
+    # resp = requests.get("http://www.webcal.fi/cal.php?id=221&format=json&start_year=2016&end_year=2017&tz=Europe%2FDublin")
 
     jsonResponse=json.loads(resp.text)
     cursor = connection.cursor()
@@ -102,7 +108,7 @@ def loadEvents(requests, city):
 
     """
 
-    print("Call API for Events in a City")
+    print("Call API for Events in City "+city)
 
     api = eventful.API('JmGWfK7NFTc4NvX7')
 
@@ -116,30 +122,32 @@ def loadEvents(requests, city):
 
     events_count = 0
     try:
-        for num in range(1,4):
-            events = api.call('/events/search', l=city, t='2016010100-2017123100', page_size=250, page_number = num, sort_order='popularity', sort_direction='descending')
+        # for num in range(1,4):
+        events = api.call('/events/search', l=city,  t='2016090600-2017090500', page_size=250, page_number = 1, sort_order='popularity', sort_direction='descending')
+        # sort_order='popularity', sort_direction='descending'
+        # t='2015100300-2016061400',
 
-            for event in events['events']['event']:
-                try:
-                    title = event['title']
-                    title = title+", "
-                    venue_name = event['venue_name']
-                    start_time = event['start_time']
-                    start_date = start_time[0:10]
-                    print start_date, title
-                    cursor.execute('INSERT INTO holiday_event \
-                                        (date, city, event) \
-                                    VALUES \
-                                        (%s, %s, %s) \
-                                    ON DUPLICATE KEY UPDATE \
-                                        event = concat(event, %s);', (start_date, city, title, title))
-                    connection.commit()
-                    events_count+=1
-                    # time.sleep(1)
-                except Exception as detail:
-                    print(detail)
-                    return HttpResponse(events_count)
-                    pass
+        for event in events['events']['event']:
+            try:
+                title = event['title']
+                title = title+", "
+                venue_name = event['venue_name']
+                start_time = event['start_time']
+                start_date = start_time[0:10]
+                # print start_date, title
+                cursor.execute('INSERT INTO holiday_event \
+                                    (date, city, event) \
+                                VALUES \
+                                    (%s, %s, %s) \
+                                ON DUPLICATE KEY UPDATE \
+                                    event = concat(event, %s);', (start_date, city, title, title))
+                connection.commit()
+                events_count+=1
+                # time.sleep(1)
+            except Exception as detail:
+                print(detail)
+                # return HttpResponse(events_count)
+                pass
     except Exception as detail:
         print(detail)
         return HttpResponse(events_count)
