@@ -119,7 +119,7 @@ def compute_bin_width(result):
     MIN_VALUE = min([float(i) for i in percent_difference_list_updated])
     MAX_VALUE = max([float(i) for i in percent_difference_list_updated])
 
-    BIN_WIDTH = (MAX_VALUE - MIN_VALUE) / NUMBER_OF_BINS
+    BIN_WIDTH = math.floor((MAX_VALUE - MIN_VALUE) / NUMBER_OF_BINS)
 
     BIN_WIDTH = 1 if BIN_WIDTH < 1 else BIN_WIDTH
 
