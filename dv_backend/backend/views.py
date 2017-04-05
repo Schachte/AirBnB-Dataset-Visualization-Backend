@@ -50,7 +50,7 @@ def CalendarSummary(request, city, nhood):
     """
     @Table Structure:
     +------------+------------+---------------+------------------------------------------------------+
-    | city_name  | date       | average_price | happenings                                           |
+    | city_name  | date       | average_price | neighbourhood                                          |
     +------------+------------+---------------+------------------------------------------------------+
 
     @Description:
