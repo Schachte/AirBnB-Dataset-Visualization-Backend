@@ -60,6 +60,9 @@ def CalendarSummary(request, city, nhood):
 
     print("doing a query on the database for city %s and neighborhood %s"%(city, nhood))
 
+    #Ensure that the spaces cities are supported
+    city = city.replace('_', ' ')
+    nhood = nhood.replace('_', ' ')
 
     cursor = connection.cursor()
 

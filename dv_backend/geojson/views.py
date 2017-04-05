@@ -8,11 +8,11 @@ import json, ast
 
 def GetGeoJson(request, city_name=''):
     '''Returns the GEOJson for a particular city'''
-    
+        
     if (not city_name):
         return HttpResponse("Missing City Name : %s"%(city_name), status=422)
     else:
-
+        city_name = city_name.replace('_', ' ')
         try:
             #Query DB for the GEOJson Data
             cursor = connection.cursor()
