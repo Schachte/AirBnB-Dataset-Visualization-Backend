@@ -56,10 +56,10 @@ def AmenityData(request):
         # rows = cursor.fetchall()
         rows = [list(item) for item in cursor.fetchall()]
 
-
+        #This method is used to essentially parse the floats in a nicer way.. the indexing in the second loop is to handle neighborhoods
         for index1, row in enumerate(rows):
-            for index2, value in enumerate(row):
-                try: 
+            for index2, value in enumerate(row[0:-1]):
+                try:
                     row[index2] = float(value)
                     row[index2] = "{0:.2f}".format(row[index2])
                 except Exception as e:
