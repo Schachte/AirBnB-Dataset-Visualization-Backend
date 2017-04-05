@@ -12,13 +12,17 @@ def GetGeoJson(request, city_name=''):
     if (not city_name):
         return HttpResponse("Missing City Name : %s"%(city_name), status=422)
     else:
-    
-        #Query DB for the GEOJson Data
-        cursor = connection.cursor()
-        cursor.execute('SELECT geojson from neighbourhood_shape where city_name="%s"'%(city_name))
-        rows = cursor.fetchall()
+
+        try:
+            #Query DB for the GEOJson Data
+            cursor = connection.cursor()
+            cursor.execute('SELECT geojson from neighbourhood_shape where city_name="%s"'%(city_name))
+            rows = cursor.fetchall()
+            
+            json_data = json.dumps(rows[0], indent=4, sort_keys=True, default=str)
+            json_data = json.loads(json_data)
+            
+            return HttpResponse(json_data, status=200)
+        except Exception as e:
+            return HttpResponse(e, status=500)
         
-        json_data = json.dumps(rows[0], indent=4, sort_keys=True, default=str)
-        json_data = json.loads(json_data)
-        
-        return HttpResponse(json_data, status=422)
