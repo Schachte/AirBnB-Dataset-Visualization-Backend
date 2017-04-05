@@ -24,5 +24,7 @@ def GetGeoJson(request, city_name=''):
             
             return HttpResponse(json_data, status=200)
         except Exception as e:
+            
+            # TODO: Make these errors make more sense
             return HttpResponse(e, status=500)
         
