@@ -26,7 +26,11 @@ def CityReviews(request, city):
     print("doing a query on the database for %s"%(city))
 
     cursor = connection.cursor()
-    cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s"'%(city))
+    if(city.lower() == 'all'):
+        cursor.execute('SELECT city_name, comments FROM reviews')
+    else:
+        cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s"'%(city))
+
     rows = cursor.fetchall()
     #Store return data from the SQL query
     result = []
@@ -50,7 +54,7 @@ def CalendarSummary(request, city, nhood):
     """
     @Table Structure:
     +------------+------------+---------------+------------------------------------------------------+
-    | city_name  | date       | average_price | happenings                                           |
+    | city_name  | date       | average_price | neighbourhood                                          |
     +------------+------------+---------------+------------------------------------------------------+
 
     @Description:
