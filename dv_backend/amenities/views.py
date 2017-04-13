@@ -20,8 +20,10 @@ def AmenityData(request):
     '''
 
     if (request.method == 'POST'):
-        #List requested input params
-        req_params = ['city_name', 'metric', 'filters']
+        
+        # query_params, metric, query_params, metric, metric, city, min_price, max_price, min_staycount, max_staycount, min_est_monthly_income, max_est_monthly_income))
+        # List requested input params
+        req_params = ['city_name', 'metric', 'filters', 'min_price', 'max_price', 'min_staycount', 'max_staycount', 'min_est_monthly_income', 'max_est_monthly_income']
 
         amenities = [
             'host_is_superhost',
@@ -48,13 +50,19 @@ def AmenityData(request):
             return HttpResponse("Missing Parameters", status=422)
 
         #Retrieve clenased information
-        city_name, metric, filters = cleanse_input(post_dat)
+        city_name, metric, filters, min_price, max_price, min_staycount, max_staycount, min_est_monthly_income, max_est_monthly_income = cleanse_input(post_dat)
+        
+        if (filters == ''):
+            return HttpResponse("[]", status=200)
 
         #Initialize the query that will get the pricing information based on the input information from the user into the SQL query
         cursor = connection.cursor()
-        cursor.execute(retrieve_query(filters, city_name, amenities, metric))
+        cursor.execute(retrieve_query(filters, city_name, amenities, metric, min_price, max_price, min_staycount, max_staycount, min_est_monthly_income, max_est_monthly_income))
         # rows = cursor.fetchall()
         rows = [list(item) for item in cursor.fetchall()]
+        
+        print("INITLA ROWS")
+        print(rows)
 
         #This method is used to essentially parse the floats in a nicer way.. the indexing in the second loop is to handle neighborhoods
         for index1, row in enumerate(rows):
@@ -105,15 +113,23 @@ def compute_bin_width(result):
     '''
     #Max recommended number of bins to use for the equal interval classification
     NUMBER_OF_BINS = 7
+    
+    print(result)
 
     #Extract just the % difference values
     percent_difference_list = [pd['percentDifference'] for pd in result]
     percent_difference_list_updated = []
+    
+    print("\n\n\n\n\n")
+    print(percent_difference_list)
 
     #Cheap way of removing nils
     for data in percent_difference_list:
         if data != None:
             percent_difference_list_updated.append(data)
+            
+    print("\n\n\n")
+    print(percent_difference_list_updated)
 
     #Compute all the values for the proper binning
     MIN_VALUE = min([float(i) for i in percent_difference_list_updated])
@@ -138,15 +154,26 @@ def cleanse_input(post_dat):
     @Description:
     Clean the input data to process the SQL query
     '''
+    
     city_name   = post_dat['city_name']
     metric      = post_dat['metric']
+
+    min_price = post_dat['min_price']
+    max_price = post_dat['max_price']
+
+    min_staycount = post_dat['min_staycount']
+    max_staycount = post_dat['max_staycount']
+    
+    min_est_monthly_income = post_dat['min_est_monthly_income']
+    max_est_monthly_income = post_dat['max_est_monthly_income']
+    
     filters = [x.strip(' ') for x in post_dat['filters'].split(',')]
     filters = ', '.join(filters)
 
-    return city_name, metric, filters
+    return city_name, metric, filters, min_price, max_price, min_staycount, max_staycount, min_est_monthly_income, max_est_monthly_income
 
 
-def retrieve_query(filters, city, amenities, metric):
+def retrieve_query(filters, city, amenities, metric, min_price, max_price, min_staycount, max_staycount, min_est_monthly_income, max_est_monthly_income):
     '''
     @Description:
     Retrieve SQL Query
@@ -155,20 +182,28 @@ def retrieve_query(filters, city, amenities, metric):
 
     #null params
     if (not filters):
-        query_params = ','.join(amenities)
+        query_params = ''
     else:
         query_params = filters
+        print(query_params)
+    
     return ('''
-SELECT
-    ( ( avgWithCriteria - totalAverage ) / ( ( avgWithCriteria + totalAverage ) / 2 ) ) * 100 as percentDifference,
-    a.*
-FROM
-    (SELECT
-        AVG( CASE WHEN 'f' not in ( %s ) THEN %s ELSE null END) as avgWithCriteria,
-        AVG( CASE WHEN 'f'        in ( %s ) THEN %s ELSE null END) as avgWithoutCriteria,
-        AVG( %s ) as totalAverage,
-        neighbourhood_cleansed
-    FROM listings
-    WHERE city_name = '%s'
-    GROUP BY neighbourhood_cleansed ) a;
-'''%(query_params, metric, query_params, metric, metric, city))
+        SELECT
+        ( ( avgWithCriteria - totalAverage ) / ( ( avgWithCriteria + totalAverage ) / 2 ) ) * 100 as percentDifference,
+        a.*
+    FROM 
+        (SELECT
+            AVG( CASE WHEN 'f' not in ( %s ) THEN %s ELSE null END) as avgWithCriteria,
+            AVG( CASE WHEN 'f'        in ( %s ) THEN %s ELSE null END) as avgWithoutCriteria,
+            AVG( %s ) as totalAverage,
+            neighbourhood_cleansed
+        FROM listings 
+        WHERE city_name = "%s" 
+        AND price <= %.2f 
+        AND price >= %.2f 
+        AND reviews_per_month <= %.2f 
+        AND reviews_per_month >= %.2f 
+        AND est_monthly_income <= %.2f 
+        AND est_monthly_income >= %.2f 
+        GROUP BY neighbourhood_cleansed ) a;
+    ''')%(query_params, metric, query_params, metric, metric, city, float(max_price), float(min_price), float(max_staycount), float(min_staycount), float(max_est_monthly_income), float(min_est_monthly_income))
