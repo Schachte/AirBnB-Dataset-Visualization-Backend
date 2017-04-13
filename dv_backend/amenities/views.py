@@ -24,7 +24,7 @@ def AmenityData(request):
         # query_params, metric, query_params, metric, metric, city, min_price, max_price, min_staycount, max_staycount, min_est_monthly_income, max_est_monthly_income))
         # List requested input params
         req_params = ['city_name', 'metric', 'filters', 'min_price', 'max_price', 'min_staycount', 'max_staycount', 'min_est_monthly_income', 'max_est_monthly_income']
-
+        
         amenities = [
             'host_is_superhost',
             'security_deposit',
@@ -128,9 +128,6 @@ def compute_bin_width(result):
         if data != None:
             percent_difference_list_updated.append(data)
             
-    print("\n\n\n")
-    print(percent_difference_list_updated)
-
     #Compute all the values for the proper binning
     MIN_VALUE = min([float(i) for i in percent_difference_list_updated])
     MAX_VALUE = max([float(i) for i in percent_difference_list_updated])
@@ -186,24 +183,47 @@ def retrieve_query(filters, city, amenities, metric, min_price, max_price, min_s
     else:
         query_params = filters
         print(query_params)
-    
-    return ('''
-        SELECT
-        ( ( avgWithCriteria - totalAverage ) / ( ( avgWithCriteria + totalAverage ) / 2 ) ) * 100 as percentDifference,
-        a.*
-    FROM 
-        (SELECT
-            AVG( CASE WHEN 'f' not in ( %s ) THEN %s ELSE null END) as avgWithCriteria,
-            AVG( CASE WHEN 'f'        in ( %s ) THEN %s ELSE null END) as avgWithoutCriteria,
-            AVG( %s ) as totalAverage,
-            neighbourhood_cleansed
-        FROM listings 
-        WHERE city_name = "%s" 
-        AND price <= %.2f 
-        AND price >= %.2f 
-        AND reviews_per_month <= %.2f 
-        AND reviews_per_month >= %.2f 
-        AND est_monthly_income <= %.2f 
-        AND est_monthly_income >= %.2f 
-        GROUP BY neighbourhood_cleansed ) a;
-    ''')%(query_params, metric, query_params, metric, metric, city, float(max_price), float(min_price), float(max_staycount), float(min_staycount), float(max_est_monthly_income), float(min_est_monthly_income))
+
+    if (metric == "num_listings"):
+        return('''
+            SELECT
+                ( ( avgWithCriteria - avgWithoutCriteria ) / ( ( totalAverage ) / 2 ) ) * 100 as percentDifference,
+                a.*
+            FROM
+                (SELECT
+                    SUM( CASE WHEN 'f' not in ( %s ) THEN 1 ELSE 0 END) as avgWithCriteria,
+                    SUM( CASE WHEN 'f'        in ( %s ) THEN 1 ELSE 0 END) as avgWithoutCriteria,
+                    SUM( 1 ) as totalAverage,
+                    neighbourhood_cleansed
+                FROM listings 
+                WHERE city_name = "%s"
+                AND price <= %.2f
+                AND price >= %.2f
+                AND reviews_per_month <= %.2f
+                AND reviews_per_month >= %.2f
+                AND est_monthly_income <= %.2f
+                AND est_monthly_income >= %.2f
+                GROUP BY neighbourhood_cleansed ) a;
+            '''%(query_params, query_params, city, float(max_price), float(min_price), float(max_staycount), float(min_staycount), float(max_est_monthly_income), float(min_est_monthly_income)))
+        
+    else:
+        return ('''
+            SELECT
+            ( ( avgWithCriteria - totalAverage ) / ( ( avgWithCriteria + totalAverage ) / 2 ) ) * 100 as percentDifference,
+            a.*
+        FROM 
+            (SELECT
+                AVG( CASE WHEN 'f' not in ( %s ) THEN %s ELSE null END) as avgWithCriteria,
+                AVG( CASE WHEN 'f'        in ( %s ) THEN %s ELSE null END) as avgWithoutCriteria,
+                AVG( %s ) as totalAverage,
+                neighbourhood_cleansed
+            FROM listings 
+            WHERE city_name = "%s" 
+            AND price <= %.2f 
+            AND price >= %.2f 
+            AND reviews_per_month <= %.2f 
+            AND reviews_per_month >= %.2f 
+            AND est_monthly_income <= %.2f 
+            AND est_monthly_income >= %.2f 
+            GROUP BY neighbourhood_cleansed ) a;
+        ''')%(query_params, metric, query_params, metric, metric, city, float(max_price), float(min_price), float(max_staycount), float(min_staycount), float(max_est_monthly_income), float(min_est_monthly_income))
