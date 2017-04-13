@@ -6,6 +6,7 @@ from amenities import views as amenity_views
 from geojson import views as geojson_views
 from parallel_coord_plot import views as parallel_views
 from word_cloud import views as word_cloud_views
+from bars import views as bars_views
 
 router = routers.DefaultRouter()
 
@@ -28,5 +29,6 @@ urlpatterns = [
 
     url(r'geojson/(?P<city_name>\w+|)/$', geojson_views.GetGeoJson),
     url(r'geojson/$', geojson_views.GetGeoJson),
+    url(r'updateBars/$', bars_views.updateBars),
 
 ]
