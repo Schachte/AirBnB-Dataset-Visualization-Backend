@@ -77,8 +77,12 @@ def CalendarSummary(request, city, nhood):
         ap = cursor.fetchone()
         cursor.execute('SELECT MAX(average_price) FROM calendar_summary WHERE city_name = "%s" and neighbourhood is null'%(city))
         maxP = cursor.fetchone()
+        cursor.execute('SELECT calendar_summary.date FROM calendar_summary WHERE average_price = "%s" and city_name = "%s" and neighbourhood is null'%(maxP[0], city))
+        maxDate = cursor.fetchone()
         cursor.execute('SELECT MIN(average_price) FROM calendar_summary WHERE city_name = "%s" and neighbourhood is null'%(city))
         minP = cursor.fetchone()
+        cursor.execute('SELECT calendar_summary.date FROM calendar_summary WHERE average_price = "%s" and city_name = "%s" and neighbourhood is null'%(minP[0], city))
+        minDate = cursor.fetchone()
     else:
         cursor.execute('SELECT calendar_summary.city_name, calendar_summary.date, calendar_summary.average_price, calendar_summary.neighbourhood, holiday_event.holiday, holiday_event.event FROM calendar_summary left JOIN holiday_event ON (calendar_summary.city_name = holiday_event.city and calendar_summary.date = holiday_event.date) where calendar_summary.city_name = "%s" and neighbourhood = "%s" order by calendar_summary.date'%(city, nhood) )
         rows = cursor.fetchall()
@@ -86,8 +90,12 @@ def CalendarSummary(request, city, nhood):
         ap = cursor.fetchone()
         cursor.execute('SELECT MAX(average_price) FROM calendar_summary WHERE city_name = "%s" and neighbourhood = "%s"'%(city, nhood))
         maxP = cursor.fetchone()
+        cursor.execute('SELECT calendar_summary.date FROM calendar_summary WHERE average_price = "%s" and city_name = "%s" and neighbourhood = "%s"'%(maxP[0], city, nhood))
+        maxDate = cursor.fetchone()
         cursor.execute('SELECT MIN(average_price) FROM calendar_summary WHERE city_name = "%s" and neighbourhood = "%s"'%(city, nhood))
         minP = cursor.fetchone()
+        cursor.execute('SELECT calendar_summary.date FROM calendar_summary WHERE average_price = "%s" and city_name = "%s" and neighbourhood = "%s"'%(minP[0], city, nhood))
+        minDate = cursor.fetchone()
         # 'SELECT * FROM calendar_summary WHERE city_name="%s"'%(city))
 
 
@@ -111,7 +119,7 @@ def CalendarSummary(request, city, nhood):
     # avgPrice = json.loads(avgP)
     # dataPoints = json.loads(result)
 
-    finaldata = { 'avgPrice' : ap[0], 'maxPrice' : maxP[0], 'minPrice' : minP[0], 'dataPoints' : result }
+    finaldata = { 'avgPrice' : ap[0], 'maxPrice' : maxP[0], 'maxDate' : maxDate[0], 'minDate' : minDate[0],'minPrice' : minP[0], 'dataPoints' : result }
 
 
 
