@@ -76,15 +76,23 @@ def AmenityData(request):
         
         #Column values in the summary table
         keys = ('percentDifference', 'averageWithCriteria', 'averageWithoutCriteria', 'totalAverage', 'neighborhood')
-
+        
         for row in rows:
             result.append(dict(zip(keys,row)))
             
         if (filters == ''):
             return HttpResponse(json.dumps(result, indent=4, default=str), content_type="application/json", status=200)
 
+        
+        print("result is "),
+        print(result)
+
         #Compute the bin width for all values that are going to be classified
         bin_width, min_value, max_value = compute_bin_width(result)
+        
+        if (bin_width == -1 and min_value == -1 and max_value == -1):
+            return HttpResponse("[]", status=200)
+        
         min_value = round(min_value, 2)
 
         for data in result:
@@ -113,12 +121,11 @@ def compute_bin_width(result):
     '''
     #Max recommended number of bins to use for the equal interval classification
     NUMBER_OF_BINS = 7
-    
-    print(result)
 
     #Extract just the % difference values
     percent_difference_list = [pd['percentDifference'] for pd in result]
     percent_difference_list_updated = []
+    
     
     print("\n\n\n\n\n")
     print(percent_difference_list)
@@ -127,6 +134,9 @@ def compute_bin_width(result):
     for data in percent_difference_list:
         if data != None:
             percent_difference_list_updated.append(data)
+            
+    if (percent_difference_list_updated == []):
+        return [-1, -1, -1]
             
     #Compute all the values for the proper binning
     MIN_VALUE = min([float(i) for i in percent_difference_list_updated])
@@ -182,7 +192,6 @@ def retrieve_query(filters, city, amenities, metric, min_price, max_price, min_s
         query_params = 'city_name'
     else:
         query_params = filters
-        print(query_params)
 
     if (metric == "num_listings"):
         return('''
