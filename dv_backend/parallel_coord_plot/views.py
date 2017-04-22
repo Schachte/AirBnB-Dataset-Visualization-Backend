@@ -65,6 +65,9 @@ def ParallelCoordData(request):
         for row in rows:
             result.append(dict(zip(keys,row)))
 
+        if (filters == ''):
+            return HttpResponse(json.dumps(result, indent=4, default=str), content_type="application/json", status=200)
+
         #Get the average pricing information based on filter selection
         return HttpResponse(json.dumps(result, indent=4, sort_keys=True, default=str), content_type="application/json", status=200)
     else:
@@ -91,10 +94,9 @@ def retrieve_query(filters, city, amenities, neighborhood):
     '''
     query_params = ''
 
-
     #null params
     if (not filters):
-        query_params = ','.join(amenities)
+        query_params = 'city_name'
     else:
         query_params = filters
 
@@ -122,9 +124,3 @@ def retrieve_query(filters, city, amenities, neighborhood):
                 AND
                     neighbourhood_cleansed = '%s';
                 '''%(city, query_params, neighborhood))
-
-
-
-
-
-    # print('where the metric is %s'%(metric))
