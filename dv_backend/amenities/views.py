@@ -52,8 +52,8 @@ def AmenityData(request):
         #Retrieve clenased information
         city_name, metric, filters, min_price, max_price, min_staycount, max_staycount, min_est_monthly_income, max_est_monthly_income = cleanse_input(post_dat)
         
-        if (filters == ''):
-            return HttpResponse("[]", status=200)
+        # if (filters == ''):
+        #     return HttpResponse("[]", status=200)
 
         #Initialize the query that will get the pricing information based on the input information from the user into the SQL query
         cursor = connection.cursor()
@@ -61,9 +61,6 @@ def AmenityData(request):
         # rows = cursor.fetchall()
         rows = [list(item) for item in cursor.fetchall()]
         
-        print("INITLA ROWS")
-        print(rows)
-
         #This method is used to essentially parse the floats in a nicer way.. the indexing in the second loop is to handle neighborhoods
         for index1, row in enumerate(rows):
             for index2, value in enumerate(row[0:-1]):
@@ -82,6 +79,9 @@ def AmenityData(request):
 
         for row in rows:
             result.append(dict(zip(keys,row)))
+            
+        if (filters == ''):
+            return HttpResponse(json.dumps(result, indent=4, default=str), content_type="application/json", status=200)
 
         #Compute the bin width for all values that are going to be classified
         bin_width, min_value, max_value = compute_bin_width(result)
@@ -179,7 +179,7 @@ def retrieve_query(filters, city, amenities, metric, min_price, max_price, min_s
 
     #null params
     if (not filters):
-        query_params = ''
+        query_params = 'city_name'
     else:
         query_params = filters
         print(query_params)

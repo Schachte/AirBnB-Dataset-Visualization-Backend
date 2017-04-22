@@ -22,9 +22,10 @@ def GetGeoJson(request, city_name=''):
             json_data = json.dumps(rows[0], indent=4, sort_keys=True, default=str)
             json_data = json.loads(json_data)
             
+            print(json_data)
+            
             return HttpResponse(json_data, status=200)
         except Exception as e:
-            
             # TODO: Make these errors make more sense
             return HttpResponse(e, status=500)
         
