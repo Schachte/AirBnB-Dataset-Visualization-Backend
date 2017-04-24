@@ -29,7 +29,7 @@ def CityReviews(request, city):
     if(city.lower() == 'all'):
         cursor.execute('SELECT city_name, comments FROM reviews')
     else:
-        cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s"'%(city))
+        cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s" limit 200'%(city))
 
     rows = cursor.fetchall()
     #Store return data from the SQL query
