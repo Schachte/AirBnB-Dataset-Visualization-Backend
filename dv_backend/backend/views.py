@@ -25,24 +25,47 @@ def CityReviews(request, city):
     """
     print("doing a query on the database for %s"%(city))
 
-    cursor = connection.cursor()
-    if(city.lower() == 'all'):
-        cursor.execute('SELECT city_name, comments FROM reviews')
-    else:
-        cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s" limit 200'%(city))
-
-    rows = cursor.fetchall()
-    #Store return data from the SQL query
-    result = []
-
     #Column values in the summary table
     keys = ('city_name', 'comments')
+    cursor = connection.cursor()
+    if(city.lower() == 'all'):
+        # cursor.execute('SELECT city_name, comments FROM reviews')
+        city_arr = ['Amsterdam','Antwerp','Asheville','Athens','Austin','Barcelona','Berlin','Boston','Brussels','Chicago','Copenhagen','Denver','Dublin','Edinburgh','Geneva','Hong Kong','London','Los Angeles','Madrid','Mallorca','Manchester','Melbourne','Montreal','Nashville', 'New Orleans','New York City','Northern Rivers','Oakland','Paris','Portland','Quebec City','San Diego','San Francisco','Santa Cruz County','Seattle','Sydney','Toronto','Trentino','Vancouver','Venice','Victoria','Vienna','Washington DC']
+        result = []
+        for city in city_arr:
+            cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s" limit 500'%(city))
+            rows = cursor.fetchall()
+            for row in rows:
+                row = list(row)
+                row[1] = unicodedata.normalize('NFKD', row[1]).encode('ascii','ignore')
+                row[1] = row[1].replace('\n', ' ').replace('\r', '')
+                result.append(dict(zip(keys,row)))
+            print city+" done"
 
-    for row in rows:
-        row = list(row)
-        row[1] = unicodedata.normalize('NFKD', row[1]).encode('ascii','ignore')
-        row[1] = row[1].replace('\n', ' ').replace('\r', '')
-        result.append(dict(zip(keys,row)))
+
+    else:
+        cursor.execute('SELECT city_name, comments FROM reviews WHERE city_name like "%s" limit 500'%(city))
+        rows = cursor.fetchall()
+        #Store return data from the SQL query
+        result = []
+        for row in rows:
+            row = list(row)
+            row[1] = unicodedata.normalize('NFKD', row[1]).encode('ascii','ignore')
+            row[1] = row[1].replace('\n', ' ').replace('\r', '')
+            result.append(dict(zip(keys,row)))
+
+    # rows = cursor.fetchall()
+    # #Store return data from the SQL query
+    # result = []
+    #
+    #
+    # # keys = ('city_name', 'comments')
+    #
+    # for row in rows:
+    #     row = list(row)
+    #     row[1] = unicodedata.normalize('NFKD', row[1]).encode('ascii','ignore')
+    #     row[1] = row[1].replace('\n', ' ').replace('\r', '')
+    #     result.append(dict(zip(keys,row)))
 
     json_data = json.dumps(result, indent=4, sort_keys=True, default=str)
 
