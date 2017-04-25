@@ -65,7 +65,7 @@ def loadFrequencyTFIDF(request):
 
     """
 
-    with open('/Users/suhasini/Desktop/data.JSON'.decode('utf-8')) as json_data:
+    with open('/Users/suhasini/Desktop/cityFrequency300EnglishReviews.JSON'.decode('utf-8')) as json_data:
         json_obj = json.load(json_data)
     print(json_obj)
 
@@ -111,22 +111,23 @@ def retrieveWordCloud(request, city):
     cursor.execute('SELECT word, frequency FROM word_frequency WHERE city = "%s"'%(city))
     freqs = cursor.fetchall();
 
-    cursor.execute('SELECT word, tfidf FROM word_tfidf WHERE city = "%s"'%(city))
-    tfidfs = cursor.fetchall();
+    # cursor.execute('SELECT word, tfidf FROM word_tfidf WHERE city = "%s"'%(city))
+    # tfidfs = cursor.fetchall();
 
 
     resultfreq = []
-    resulttfidf = []
+    # resulttfidf = []
 
     keys = ('text', 'size')
 
     for freq in freqs:
         resultfreq.append(dict(zip(keys,freq)))
 
-    for tfidf in tfidfs:
-        resulttfidf.append(dict(zip(keys, tfidf)))
+    # for tfidf in tfidfs:
+    #     resulttfidf.append(dict(zip(keys, tfidf)))
 
-    finaldata = { 'city' : city, 'freqList' : resultfreq, 'tfidfList' : resulttfidf }
+    # finaldata = { 'city' : city, 'freqList' : resultfreq, 'tfidfList' : resulttfidf }
+    finaldata =  { 'freqList' : resultfreq }
 
     json_data = json.dumps(finaldata, indent=4, sort_keys=True, default=str)
 
